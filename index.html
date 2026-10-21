@@ -3,293 +3,486 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Shark Finish 2D</title>
 <style>
-* {box-sizing:border-box}
+* { box-sizing: border-box; }
+
 body {
-  margin:0;
-  min-height:100vh;
-  background:linear-gradient(#05345c,#02152e);
-  color:white;
-  font-family:Arial,sans-serif;
-  text-align:center;
-  overflow-x:hidden;
+  margin: 0;
+  min-height: 100vh;
+  font-family: Arial, sans-serif;
+  color: white;
+  text-align: center;
+  background: linear-gradient(#063b67, #021326);
 }
-h1 {color:#6eeaff;margin:15px 0 5px}
-p {margin:8px}
-#score {font-size:23px;font-weight:bold}
-.ocean {
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  gap:8px;
-  margin:12px auto;
+
+h1 {
+  color: #78eaff;
+  margin: 12px 0 5px;
 }
-#game {
-  width:min(76vw,440px);
-  height:auto;
-  border:4px solid #7ceaff;
-  border-radius:12px;
-  box-shadow:0 0 25px #008cff77;
-  background:#0877b5;
-}
-.decor {
-  width:42px;
-  height:400px;
-  max-height:76vw;
-  position:relative;
-  overflow:hidden;
-}
-.fish {
-  position:absolute;
-  width:27px;
-  height:15px;
-  border-radius:60% 45% 45% 60%;
-  background:var(--c);
-  left:5px;
-  top:var(--y);
-  animation:swim 3s ease-in-out infinite alternate;
-  animation-delay:var(--delay);
-}
-.fish:before {
-  content:"";
-  position:absolute;
-  left:-10px;
-  top:0;
-  border-top:8px solid transparent;
-  border-bottom:8px solid transparent;
-  border-right:12px solid var(--c);
-}
-.fish:after {
-  content:"";
-  position:absolute;
-  width:3px;height:3px;
-  border-radius:50%;
-  background:#102c42;
-  right:5px;top:4px;
-}
-@keyframes swim {
-  from {transform:translateY(-12px) rotate(-8deg)}
-  to {transform:translateY(14px) rotate(8deg)}
-}
+
 button {
-  background:#04a8db;
-  color:white;
-  border:0;
-  border-radius:12px;
-  padding:12px 20px;
-  font-size:22px;
-  font-weight:bold;
-  cursor:pointer;
-  touch-action:manipulation;
+  border: none;
+  border-radius: 12px;
+  padding: 12px 22px;
+  background: #00a8db;
+  color: white;
+  font-size: 18px;
+  font-weight: bold;
+  cursor: pointer;
+  touch-action: manipulation;
 }
-#start {background:#0caa73;font-size:18px}
+
+button:hover { background: #007fa9; }
+
+#menu {
+  position: relative;
+  width: min(94vw, 500px);
+  min-height: 560px;
+  margin: 25px auto;
+  padding: 35px 20px;
+  border: 3px solid #64eaff;
+  border-radius: 22px;
+  overflow: hidden;
+  background: linear-gradient(#087fba, #04325e);
+  box-shadow: 0 0 30px #00bfff55;
+}
+
+#menu h1 {
+  font-size: clamp(34px, 8vw, 52px);
+  text-shadow: 3px 4px #06324c;
+}
+
+.subtitle {
+  color: #b8f7ff;
+  letter-spacing: 4px;
+}
+
+#menuArt {
+  display: block;
+  width: 100%;
+  max-width: 400px;
+  height: auto;
+  margin: 15px auto;
+}
+
+.menuButtons {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.menuButtons button {
+  width: 220px;
+}
+
+#playButton {
+  background: #00b77a;
+  font-size: 24px;
+}
+
+#instructions {
+  margin: 16px auto;
+  max-width: 340px;
+  padding: 14px;
+  background: #001e38dd;
+  border-radius: 12px;
+  line-height: 1.6;
+}
+
+.hidden { display: none !important; }
+
+#gameScreen { padding: 12px 0 25px; }
+
+#score {
+  font-size: 23px;
+  font-weight: bold;
+  margin: 10px;
+}
+
+.ocean {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin: 12px auto;
+}
+
+#game {
+  width: min(76vw, 440px);
+  height: auto;
+  border: 4px solid #7ceaff;
+  border-radius: 12px;
+  background: #0877b5;
+  box-shadow: 0 0 25px #008cff77;
+}
+
+.decor {
+  position: relative;
+  width: 40px;
+  height: min(76vw, 440px);
+  overflow: hidden;
+}
+
+.fish {
+  position: absolute;
+  left: 10px;
+  top: var(--y);
+  width: 23px;
+  height: 13px;
+  border-radius: 55%;
+  background: var(--c);
+  animation: swim 3s ease-in-out infinite alternate;
+  animation-delay: var(--delay);
+}
+
+.fish::before {
+  content: "";
+  position: absolute;
+  left: -9px;
+  top: 0;
+  border-top: 7px solid transparent;
+  border-bottom: 7px solid transparent;
+  border-right: 11px solid var(--c);
+}
+
+.fish::after {
+  content: "";
+  position: absolute;
+  right: 5px;
+  top: 4px;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: #09293d;
+}
+
+@keyframes swim {
+  from { transform: translateY(-10px) rotate(-8deg); }
+  to { transform: translateY(12px) rotate(8deg); }
+}
+
 .controls {
-  display:grid;
-  grid-template-columns:repeat(3,65px);
-  gap:7px;
-  justify-content:center;
-  margin:14px auto;
+  display: grid;
+  grid-template-columns: repeat(3, 65px);
+  gap: 7px;
+  justify-content: center;
+  margin: 15px auto;
 }
-.controls button {padding:12px 0}
+
+.controls button { padding: 12px 0; }
+
+.actionButtons {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 420px) {
+  .decor { width: 30px; }
+  .fish { transform: scale(.8); }
+  .ocean { gap: 3px; }
+}
 </style>
 </head>
 <body>
 
-<h1>SHARK FINISH 2D</h1>
-<p>Capture os nadadores e sobreviva!</p>
-<div id="score">Pontos: 0</div>
+<!-- TELA INICIAL -->
+<section id="menu">
+  <h1>SHARK FINISH</h1>
+  <p class="subtitle">2D ADVENTURE</p>
 
-<div class="ocean">
-  <div class="decor" id="leftFish"></div>
-  <canvas id="game" width="400" height="400"></canvas>
-  <div class="decor" id="rightFish"></div>
-</div>
+  <canvas id="menuArt" width="400" height="270"></canvas>
 
-<button id="start" onclick="restart()">INICIAR / REINICIAR</button>
+  <div class="menuButtons">
+    <button id="playButton" onclick="startGame()">▶ JOGAR</button>
+    <button onclick="toggleInstructions()">COMO JOGAR</button>
+  </div>
 
-<div class="controls">
-  <span></span>
-  <button onclick="turn(0,-1)">▲</button>
-  <span></span>
-  <button onclick="turn(-1,0)">◀</button>
-  <button onclick="turn(0,1)">▼</button>
-  <button onclick="turn(1,0)">▶</button>
-</div>
-<p>Use as setas ou WASD no computador.</p>
+  <div id="instructions" class="hidden">
+    <strong>COMO JOGAR</strong>
+    <p>
+      Controle o tubarão e capture os nadadores
+      para ganhar 10 pontos por captura.
+    </p>
+    <p>
+      Computador: setas ou WASD.<br>
+      Celular: botões de direção.
+    </p>
+    <p>Não bata nas paredes nem no próprio corpo!</p>
+  </div>
+</section>
+
+<!-- TELA DO JOGO -->
+<section id="gameScreen" class="hidden">
+  <h1>SHARK FINISH 2D</h1>
+  <div id="score">Pontos: 0</div>
+
+  <div class="ocean">
+    <div class="decor" id="leftFish"></div>
+    <canvas id="game" width="400" height="400"></canvas>
+    <div class="decor" id="rightFish"></div>
+  </div>
+
+  <div class="actionButtons">
+    <button onclick="restart()">REINICIAR</button>
+    <button onclick="backToMenu()">MENU INICIAL</button>
+  </div>
+
+  <div class="controls">
+    <span></span>
+    <button onclick="turn(0,-1)">▲</button>
+    <span></span>
+    <button onclick="turn(-1,0)">◀</button>
+    <button onclick="turn(0,1)">▼</button>
+    <button onclick="turn(1,0)">▶</button>
+  </div>
+</section>
 
 <script>
-const canvas=document.getElementById("game");
-const ctx=canvas.getContext("2d");
-const scoreEl=document.getElementById("score");
-const cell=20, count=20;
-let shark=[], human=null;
-let dir={x:1,y:0}, next={x:1,y:0};
-let points=0, playing=false, timer=null;
-let message="CLIQUE EM INICIAR";
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
 
-// PEIXES FORA DA AREA DO JOGO
+const menuCanvas = document.getElementById("menuArt");
+const mctx = menuCanvas.getContext("2d");
+
+const scoreEl = document.getElementById("score");
+
+const cell = 20;
+const count = 20;
+
+let shark = [];
+let human = null;
+let dir = {x:1,y:0};
+let next = {x:1,y:0};
+let points = 0;
+let playing = false;
+let timer = null;
+let message = "";
+
+function toggleInstructions() {
+  document.getElementById("instructions")
+    .classList.toggle("hidden");
+}
+
+function startGame() {
+  document.getElementById("menu").classList.add("hidden");
+  document.getElementById("gameScreen")
+    .classList.remove("hidden");
+  restart();
+}
+
+function backToMenu() {
+  playing = false;
+  clearInterval(timer);
+  document.getElementById("gameScreen")
+    .classList.add("hidden");
+  document.getElementById("menu")
+    .classList.remove("hidden");
+}
+
 function decorate(id) {
-  const el=document.getElementById(id);
-  const colors=["#ffcb30","#ff789a","#7cf9bc","#ff9944","#b39aff"];
-  for(let i=0;i<9;i++){
-    const fish=document.createElement("div");
-    fish.className="fish";
-    fish.style.setProperty("--c",colors[i%colors.length]);
-    fish.style.setProperty("--y",(5+i*10)+"%");
-    fish.style.setProperty("--delay",(-i*.4)+"s");
+  const el = document.getElementById(id);
+  const colors = [
+    "#ffcb30","#ff789a","#7cf9bc",
+    "#ff9944","#b39aff"
+  ];
+
+  for(let i=0;i<9;i++) {
+    const fish = document.createElement("div");
+    fish.className = "fish";
+    fish.style.setProperty("--c", colors[i%colors.length]);
+    fish.style.setProperty("--y", (5+i*10)+"%");
+    fish.style.setProperty("--delay", (-i*.4)+"s");
     el.appendChild(fish);
   }
 }
+
 decorate("leftFish");
 decorate("rightFish");
 
-function randomHuman(){
+function randomHuman() {
   let p;
   do {
-    p={x:Math.floor(Math.random()*count),
-       y:Math.floor(Math.random()*count)};
-  } while(shark.some(s=>s.x===p.x&&s.y===p.y));
+    p = {
+      x:Math.floor(Math.random()*count),
+      y:Math.floor(Math.random()*count)
+    };
+  } while(shark.some(s=>s.x===p.x && s.y===p.y));
   return p;
 }
 
-function restart(){
+function restart() {
   clearInterval(timer);
-  shark=[{x:10,y:10},{x:9,y:10},{x:8,y:10}];
-  dir={x:1,y:0};
-  next={x:1,y:0};
-  points=0;
-  human=randomHuman();
-  playing=true;
-  message="";
-  scoreEl.textContent="Pontos: 0";
-  timer=setInterval(update,155);
+
+  shark = [
+    {x:10,y:10},
+    {x:9,y:10},
+    {x:8,y:10}
+  ];
+
+  dir = {x:1,y:0};
+  next = {x:1,y:0};
+  points = 0;
+  human = randomHuman();
+  playing = true;
+  message = "";
+
+  scoreEl.textContent = "Pontos: 0";
+  timer = setInterval(update,155);
 }
 
-function turn(x,y){
-  if(!playing)return;
-  if(x===-dir.x&&y===-dir.y)return;
-  next={x,y};
+function turn(x,y) {
+  if(!playing) return;
+  if(x===-dir.x && y===-dir.y) return;
+  next = {x,y};
 }
 
-document.addEventListener("keydown",e=>{
-  const keys={
-    ArrowUp:[0,-1],ArrowDown:[0,1],
-    ArrowLeft:[-1,0],ArrowRight:[1,0],
-    w:[0,-1],s:[0,1],a:[-1,0],d:[1,0]
+document.addEventListener("keydown", e => {
+  const keys = {
+    ArrowUp:[0,-1],
+    ArrowDown:[0,1],
+    ArrowLeft:[-1,0],
+    ArrowRight:[1,0],
+    w:[0,-1],
+    s:[0,1],
+    a:[-1,0],
+    d:[1,0]
   };
-  if(keys[e.key]){
+
+  const key = e.key.length===1
+    ? e.key.toLowerCase()
+    : e.key;
+
+  if(keys[key]) {
     e.preventDefault();
-    turn(...keys[e.key]);
+    turn(...keys[key]);
   }
 });
 
-function update(){
-  if(!playing)return;
-  dir={...next};
-  const head={x:shark[0].x+dir.x,
-              y:shark[0].y+dir.y};
-  const eating=head.x===human.x&&head.y===human.y;
-  const body=eating?shark:shark.slice(0,-1);
+function update() {
+  if(!playing) return;
 
-  const wall=head.x<0||head.x>=count||
-             head.y<0||head.y>=count;
-  const hit=body.some(s=>s.x===head.x&&s.y===head.y);
+  dir = {...next};
 
-  if(wall||hit){
-    playing=false;
+  const head = {
+    x:shark[0].x+dir.x,
+    y:shark[0].y+dir.y
+  };
+
+  const eating =
+    head.x===human.x &&
+    head.y===human.y;
+
+  const body = eating ? shark : shark.slice(0,-1);
+
+  const wall =
+    head.x<0 || head.x>=count ||
+    head.y<0 || head.y>=count;
+
+  const hit = body.some(s =>
+    s.x===head.x && s.y===head.y
+  );
+
+  if(wall || hit) {
+    playing = false;
     clearInterval(timer);
-    message="GAME OVER - "+points+" PONTOS";
+    message = "GAME OVER - "+points+" PONTOS";
     return;
   }
 
   shark.unshift(head);
-  if(eating){
-    points+=10;
-    scoreEl.textContent="Pontos: "+points;
-    if(shark.length===count*count){
-      playing=false;
+
+  if(eating) {
+    points += 10;
+    scoreEl.textContent = "Pontos: "+points;
+
+    if(shark.length===count*count) {
+      playing = false;
       clearInterval(timer);
-      message="VOCE VENCEU!";
-    }else{
-      human=randomHuman();
+      message = "VOCÊ VENCEU!";
+    } else {
+      human = randomHuman();
     }
-  }else{
+  } else {
     shark.pop();
   }
 }
 
-// FUNDO DE AGUA ANIMADA
-function water(){
-  const g=ctx.createLinearGradient(0,0,400,400);
+function water(c,w,h) {
+  const g = c.createLinearGradient(0,0,w,h);
   g.addColorStop(0,"#079dd0");
   g.addColorStop(1,"#06467e");
-  ctx.fillStyle=g;
-  ctx.fillRect(0,0,400,400);
+  c.fillStyle = g;
+  c.fillRect(0,0,w,h);
 
-  const t=Date.now()/850;
-  for(let y=12;y<400;y+=29){
-    ctx.beginPath();
-    ctx.strokeStyle="rgba(170,245,255,.17)";
-    ctx.lineWidth=2;
-    for(let x=0;x<=400;x+=5){
-      const yy=y+Math.sin(x/30+t+y)*5;
-      if(x===0)ctx.moveTo(x,yy);
-      else ctx.lineTo(x,yy);
+  const t = Date.now()/850;
+
+  for(let y=12;y<h;y+=29) {
+    c.beginPath();
+    c.strokeStyle = "rgba(170,245,255,.17)";
+    c.lineWidth = 2;
+
+    for(let x=0;x<=w;x+=5) {
+      const yy = y+Math.sin(x/30+t+y)*5;
+      if(x===0) c.moveTo(x,yy);
+      else c.lineTo(x,yy);
     }
-    ctx.stroke();
+    c.stroke();
   }
 
-  for(let i=0;i<25;i++){
-    const x=(i*83+17)%400;
-    const y=((i*61-Date.now()/45)%400+400)%400;
-    ctx.beginPath();
-    ctx.arc(x,y,2.5,0,Math.PI*2);
-    ctx.strokeStyle="rgba(220,255,255,.4)";
-    ctx.stroke();
+  for(let i=0;i<25;i++) {
+    const x = (i*83+17)%w;
+    const y = ((i*61-Date.now()/45)%h+h)%h;
+    c.beginPath();
+    c.arc(x,y,2.5,0,Math.PI*2);
+    c.strokeStyle = "rgba(220,255,255,.4)";
+    c.stroke();
   }
 }
 
-// HUMANO DESENHADO EM 2D
-function drawHuman(){
-  if(!human)return;
-  const x=human.x*cell+10;
-  const y=human.y*cell+10;
+// NADADOR DESENHADO
+function drawHuman() {
+  if(!human) return;
+
+  const x = human.x*cell+10;
+  const y = human.y*cell+10;
 
   ctx.save();
   ctx.translate(x,y);
   ctx.rotate(Math.sin(Date.now()/300)*.12);
-  ctx.lineCap="round";
+  ctx.lineCap = "round";
 
-  // Bracos
-  ctx.strokeStyle="#f0b98d";
-  ctx.lineWidth=3;
+  ctx.strokeStyle = "#f0b98d";
+  ctx.lineWidth = 3;
   ctx.beginPath();
-  ctx.moveTo(-4,-1);ctx.lineTo(-9,3);
-  ctx.moveTo(4,-1);ctx.lineTo(9,3);
+  ctx.moveTo(-4,-1);
+  ctx.lineTo(-9,3);
+  ctx.moveTo(4,-1);
+  ctx.lineTo(9,3);
   ctx.stroke();
 
-  // Pernas
   ctx.beginPath();
-  ctx.moveTo(-3,5);ctx.lineTo(-5,9);
-  ctx.moveTo(3,5);ctx.lineTo(5,9);
+  ctx.moveTo(-3,5);
+  ctx.lineTo(-5,9);
+  ctx.moveTo(3,5);
+  ctx.lineTo(5,9);
   ctx.stroke();
 
-  // Roupa vermelha
-  ctx.fillStyle="#ff4e68";
+  ctx.fillStyle = "#ff4e68";
   ctx.beginPath();
   ctx.roundRect(-5,-3,10,10,3);
   ctx.fill();
 
-  // Cabeca
-  ctx.fillStyle="#f4c19a";
+  ctx.fillStyle = "#f4c19a";
   ctx.beginPath();
   ctx.arc(0,-7,5,0,Math.PI*2);
   ctx.fill();
 
-  // Cabelo
-  ctx.fillStyle="#49352c";
+  ctx.fillStyle = "#49352c";
   ctx.beginPath();
   ctx.arc(0,-9,5,Math.PI,2*Math.PI);
   ctx.fill();
@@ -297,107 +490,180 @@ function drawHuman(){
   ctx.restore();
 }
 
-// TUBARAO DESENHADO EM 2D
-function drawShark(){
-  shark.forEach((s,i)=>{
-    const x=s.x*cell+10;
-    const y=s.y*cell+10;
+// DESENHO DO TUBARÃO
+function sharkShape(c,x,y,scale,angle) {
+  c.save();
+  c.translate(x,y);
+  c.rotate(angle);
+  c.scale(scale,scale);
 
-    ctx.save();
-    ctx.translate(x,y);
+  // Cauda
+  c.fillStyle = "#0074b9";
+  c.beginPath();
+  c.moveTo(-8,0);
+  c.lineTo(-16,-10);
+  c.lineTo(-14,0);
+  c.lineTo(-16,10);
+  c.closePath();
+  c.fill();
 
-    if(i===0){
-      const angle=Math.atan2(dir.y,dir.x);
-      ctx.rotate(angle);
+  // Corpo
+  c.fillStyle = "#00d9ff";
+  c.beginPath();
+  c.ellipse(0,0,12,7,0,0,Math.PI*2);
+  c.fill();
 
-      // Cauda
-      ctx.fillStyle="#0074b9";
-      ctx.beginPath();
-      ctx.moveTo(-7,0);
-      ctx.lineTo(-13,-9);
-      ctx.lineTo(-12,0);
-      ctx.lineTo(-13,9);
-      ctx.closePath();
-      ctx.fill();
+  // Barriga
+  c.fillStyle = "#e8faff";
+  c.beginPath();
+  c.ellipse(4,3,7,3,0,0,Math.PI);
+  c.fill();
 
-      // Corpo azul eletrico
-      ctx.fillStyle="#00d9ff";
-      ctx.beginPath();
-      ctx.ellipse(0,0,11,7,0,0,Math.PI*2);
-      ctx.fill();
+  // Barbatana
+  c.fillStyle = "#0079c7";
+  c.beginPath();
+  c.moveTo(-5,-4);
+  c.lineTo(0,-14);
+  c.lineTo(5,-4);
+  c.closePath();
+  c.fill();
 
-      // Barriga
-      ctx.fillStyle="#e8faff";
-      ctx.beginPath();
-      ctx.ellipse(4,3,6,3,0,0,Math.PI);
-      ctx.fill();
+  // Olho
+  c.fillStyle = "#09263b";
+  c.beginPath();
+  c.arc(7,-3,1.7,0,Math.PI*2);
+  c.fill();
 
-      // Barbatana dorsal
-      ctx.fillStyle="#0079c7";
-      ctx.beginPath();
-      ctx.moveTo(-5,-4);
-      ctx.lineTo(0,-13);
-      ctx.lineTo(5,-4);
-      ctx.closePath();
-      ctx.fill();
+  // Boca
+  c.strokeStyle = "#12364b";
+  c.lineWidth = 1.3;
+  c.beginPath();
+  c.moveTo(6,3);
+  c.lineTo(12,2);
+  c.stroke();
 
-      // Olho
-      ctx.fillStyle="#09263b";
-      ctx.beginPath();
-      ctx.arc(6,-3,1.7,0,Math.PI*2);
-      ctx.fill();
+  // Dente
+  c.fillStyle = "#fff";
+  c.beginPath();
+  c.moveTo(7,3);
+  c.lineTo(9,5);
+  c.lineTo(10,2);
+  c.fill();
 
-      // Boca e dentes
-      ctx.strokeStyle="#12364b";
-      ctx.lineWidth=1.3;
-      ctx.beginPath();
-      ctx.moveTo(6,3);ctx.lineTo(11,2);
-      ctx.stroke();
+  c.restore();
+}
 
-      ctx.fillStyle="white";
-      ctx.beginPath();
-      ctx.moveTo(7,3);ctx.lineTo(9,5);
-      ctx.lineTo(10,2);
-      ctx.fill();
+function drawShark() {
+  shark.forEach((s,i) => {
+    const x = s.x*cell+10;
+    const y = s.y*cell+10;
 
-    }else{
-      // Corpo que cresce
-      ctx.fillStyle="#00b9ee";
+    if(i===0) {
+      sharkShape(
+        ctx,x,y,.85,
+        Math.atan2(dir.y,dir.x)
+      );
+    } else {
+      ctx.save();
+      ctx.translate(x,y);
+
+      ctx.fillStyle = "#00b9ee";
       ctx.beginPath();
       ctx.ellipse(0,0,9,7,0,0,Math.PI*2);
       ctx.fill();
 
-      ctx.fillStyle="#006fb2";
+      ctx.fillStyle = "#006fb2";
       ctx.beginPath();
       ctx.moveTo(-5,-4);
       ctx.lineTo(0,-11);
       ctx.lineTo(5,-4);
       ctx.closePath();
       ctx.fill();
-    }
 
-    ctx.restore();
+      ctx.restore();
+    }
   });
 }
 
-function draw(){
-  water();
-  drawHuman();
-  drawShark();
+// ARTE DESENHADA DA TELA INICIAL
+function drawMenuArt() {
+  const w = menuCanvas.width;
+  const h = menuCanvas.height;
 
-  if(!playing&&message){
-    ctx.fillStyle="rgba(0,18,40,.8)";
-    ctx.fillRect(0,155,400,90);
-    ctx.fillStyle="white";
-    ctx.textAlign="center";
-    ctx.textBaseline="middle";
-    ctx.font="bold 19px Arial";
-    ctx.fillText(message,200,200);
+  water(mctx,w,h);
+
+  const t = Date.now()/1000;
+
+  // Tubarão grande
+  sharkShape(
+    mctx,
+    190+Math.sin(t)*12,
+    125+Math.cos(t)*7,
+    5.2,
+    Math.sin(t)*.08
+  );
+
+  // Peixes desenhados ao redor
+  const colors = [
+    "#ffcb30","#ff789a",
+    "#7cf9bc","#ff9944"
+  ];
+
+  for(let i=0;i<10;i++) {
+    const x = (i*67+30)%390;
+    const y = (i*43+25)%250;
+
+    mctx.save();
+    mctx.translate(x+Math.sin(t+i)*6,y);
+    mctx.fillStyle = colors[i%colors.length];
+
+    mctx.beginPath();
+    mctx.ellipse(0,0,8,5,0,0,Math.PI*2);
+    mctx.fill();
+
+    mctx.beginPath();
+    mctx.moveTo(-6,0);
+    mctx.lineTo(-14,-6);
+    mctx.lineTo(-14,6);
+    mctx.closePath();
+    mctx.fill();
+
+    mctx.fillStyle = "#102c42";
+    mctx.beginPath();
+    mctx.arc(4,-1,1.4,0,Math.PI*2);
+    mctx.fill();
+
+    mctx.restore();
   }
 
-  requestAnimationFrame(draw);
+  requestAnimationFrame(drawMenuArt);
 }
-draw();
+
+function drawGame() {
+  if(!document.getElementById("gameScreen")
+      .classList.contains("hidden")) {
+
+    water(ctx,400,400);
+    drawHuman();
+    drawShark();
+
+    if(!playing && message) {
+      ctx.fillStyle = "rgba(0,18,40,.82)";
+      ctx.fillRect(0,155,400,90);
+
+      ctx.fillStyle = "white";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.font = "bold 19px Arial";
+      ctx.fillText(message,200,200);
+    }
+  }
+
+  requestAnimationFrame(drawGame);
+}
+
+drawMenuArt();
+drawGame();
 </script>
 </body>
 </html>
