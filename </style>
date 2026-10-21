@@ -1,0 +1,406 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Shark Finish</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Arial, sans-serif;
+      color: white;
+      text-align: center;
+
+      background-color: #063653;
+      background-image:
+        linear-gradient(
+          rgba(0, 20, 45, 0.25),
+          rgba(0, 15, 40, 0.75)
+        ),
+        url("tubarao.jpg");
+
+      background-size: cover;
+      background-position: center;
+      background-attachment: fixed;
+    }
+
+    .tela {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    h1 {
+      font-size: clamp(40px, 9vw, 90px);
+      margin-bottom: 15px;
+      text-shadow: 3px 5px 12px black;
+    }
+
+    p {
+      font-size: 20px;
+      text-shadow: 2px 2px 5px black;
+    }
+
+    button {
+      background: #00c8ff;
+      color: #00314a;
+      border: none;
+      border-radius: 14px;
+      padding: 15px 35px;
+      font-size: 22px;
+      font-weight: bold;
+      cursor: pointer;
+      margin: 12px;
+    }
+
+    button:hover {
+      background: #7ceaff;
+    }
+
+    #jogo {
+      display: none;
+    }
+
+    canvas {
+      width: min(90vw, 440px);
+      height: auto;
+      background: #087ca4;
+      border: 5px solid #8cecff;
+      border-radius: 12px;
+      box-shadow: 0 0 30px #001b35;
+    }
+
+    #pontos {
+      font-size: 26px;
+      font-weight: bold;
+    }
+
+    .controles {
+      margin-top: 15px;
+    }
+
+    .controles button {
+      padding: 10px 18px;
+      font-size: 24px;
+      margin: 3px;
+    }
+
+    #mensagem {
+      font-size: 22px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- TELA INICIAL -->
+  <div id="inicio" class="tela">
+    <h1>🦈 SHARK FINISH</h1>
+
+    <p>Domine o oceano!</p>
+
+    <button onclick="iniciarJogo()">
+      JOGAR
+    </button>
+  </div>
+
+  <!-- TELA DO JOGO -->
+  <div id="jogo" class="tela">
+
+    <h2>SHARK FINISH</h2>
+
+    <div id="pontos">Pontos: 0</div>
+
+    <canvas
+      id="tabuleiro"
+      width="400"
+      height="400">
+    </canvas>
+
+    <p id="mensagem"></p>
+
+    <div class="controles">
+      <div>
+        <button onclick="mudarDirecao(0,-1)">▲</button>
+      </div>
+
+      <div>
+        <button onclick="mudarDirecao(-1,0)">◀</button>
+        <button onclick="mudarDirecao(0,1)">▼</button>
+        <button onclick="mudarDirecao(1,0)">▶</button>
+      </div>
+    </div>
+
+    <button onclick="voltarInicio()">
+      MENU
+    </button>
+  </div>
+
+  <script>
+    const canvas = document.getElementById("tabuleiro");
+    const ctx = canvas.getContext("2d");
+
+    const tamanho = 20;
+    const total = 20;
+
+    let tubarao;
+    let nadador;
+    let direcao;
+    let proximaDirecao;
+    let pontos;
+    let intervalo;
+    let jogando = false;
+
+    function iniciarJogo() {
+      document.getElementById("inicio").style.display = "none";
+      document.getElementById("jogo").style.display = "flex";
+      document.getElementById("mensagem").textContent = "";
+
+      tubarao = [
+        { x: 10, y: 10 },
+        { x: 9, y: 10 },
+        { x: 8, y: 10 }
+      ];
+
+      direcao = { x: 1, y: 0 };
+      proximaDirecao = { x: 1, y: 0 };
+
+      pontos = 0;
+      jogando = true;
+
+      atualizarPontos();
+      criarNadador();
+      desenhar();
+
+      clearInterval(intervalo);
+      intervalo = setInterval(atualizarJogo, 150);
+    }
+
+    function atualizarPontos() {
+      document.getElementById("pontos").textContent =
+        "Pontos: " + pontos;
+    }
+
+    function criarNadador() {
+      const livres = [];
+
+      for (let y = 0; y < total; y++) {
+        for (let x = 0; x < total; x++) {
+          const ocupado = tubarao.some(
+            parte => parte.x === x && parte.y === y
+          );
+
+          if (!ocupado) {
+            livres.push({ x, y });
+          }
+        }
+      }
+
+      if (livres.length === 0) {
+        finalizarJogo("Você dominou o oceano!");
+        return;
+      }
+
+      nadador = livres[
+        Math.floor(Math.random() * livres.length)
+      ];
+    }
+
+    function mudarDirecao(x, y) {
+      if (!jogando) return;
+
+      if (
+        x === -direcao.x &&
+        y === -direcao.y
+      ) {
+        return;
+      }
+
+      proximaDirecao = { x, y };
+    }
+
+    document.addEventListener("keydown", function(evento) {
+      const tecla = evento.key.toLowerCase();
+
+      if ([
+        "arrowup", "arrowdown",
+        "arrowleft", "arrowright"
+      ].includes(tecla)) {
+        evento.preventDefault();
+      }
+
+      if (tecla === "arrowup" || tecla === "w") {
+        mudarDirecao(0, -1);
+      }
+
+      if (tecla === "arrowdown" || tecla === "s") {
+        mudarDirecao(0, 1);
+      }
+
+      if (tecla === "arrowleft" || tecla === "a") {
+        mudarDirecao(-1, 0);
+      }
+
+      if (tecla === "arrowright" || tecla === "d") {
+        mudarDirecao(1, 0);
+      }
+    });
+
+    function atualizarJogo() {
+      direcao = proximaDirecao;
+
+      const cabeca = {
+        x: tubarao[0].x + direcao.x,
+        y: tubarao[0].y + direcao.y
+      };
+
+      if (
+        cabeca.x < 0 ||
+        cabeca.x >= total ||
+        cabeca.y < 0 ||
+        cabeca.y >= total
+      ) {
+        finalizarJogo("O tubarão bateu na parede!");
+        return;
+      }
+
+      const comeu =
+        cabeca.x === nadador.x &&
+        cabeca.y === nadador.y;
+
+      const corpo = comeu
+        ? tubarao
+        : tubarao.slice(0, -1);
+
+      const bateuNoCorpo = corpo.some(
+        parte =>
+          parte.x === cabeca.x &&
+          parte.y === cabeca.y
+      );
+
+      if (bateuNoCorpo) {
+        finalizarJogo("O tubarão bateu no próprio corpo!");
+        return;
+      }
+
+      tubarao.unshift(cabeca);
+
+      if (comeu) {
+        pontos += 10;
+        atualizarPontos();
+        criarNadador();
+      } else {
+        tubarao.pop();
+      }
+
+      desenhar();
+    }
+
+    function desenhar() {
+      ctx.clearRect(0, 0, 400, 400);
+
+      // Água
+      ctx.fillStyle = "#087ca4";
+      ctx.fillRect(0, 0, 400, 400);
+
+      // Linhas suaves do oceano
+      ctx.strokeStyle = "rgba(255,255,255,0.06)";
+
+      for (let i = 0; i <= 400; i += tamanho) {
+        ctx.beginPath();
+        ctx.moveTo(i, 0);
+        ctx.lineTo(i, 400);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo(0, i);
+        ctx.lineTo(400, i);
+        ctx.stroke();
+      }
+
+      // Nadador
+      if (nadador) {
+        const nx = nadador.x * tamanho + 10;
+        const ny = nadador.y * tamanho + 10;
+
+        ctx.fillStyle = "#ffd6a0";
+        ctx.beginPath();
+        ctx.arc(nx, ny - 4, 5, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = "#ff6b6b";
+        ctx.fillRect(nx - 5, ny + 1, 10, 7);
+      }
+
+      // Corpo do tubarão
+      tubarao.forEach(function(parte, indice) {
+        const x = parte.x * tamanho;
+        const y = parte.y * tamanho;
+
+        ctx.fillStyle = indice === 0
+          ? "#b8e3ef"
+          : "#468da7";
+
+        ctx.beginPath();
+        ctx.roundRect(x + 1, y + 1, 18, 18, 5);
+        ctx.fill();
+
+        // Barbatana
+        if (indice > 0) {
+          ctx.fillStyle = "#245b76";
+          ctx.beginPath();
+          ctx.moveTo(x + 5, y + 4);
+          ctx.lineTo(x + 10, y - 5);
+          ctx.lineTo(x + 15, y + 4);
+          ctx.fill();
+        }
+      });
+
+      // Olho do tubarão
+      const cabeca = tubarao[0];
+
+      ctx.fillStyle = "#002b40";
+      ctx.beginPath();
+      ctx.arc(
+        cabeca.x * tamanho + 13,
+        cabeca.y * tamanho + 7,
+        2.5,
+        0,
+        Math.PI * 2
+      );
+      ctx.fill();
+    }
+
+    function finalizarJogo(texto) {
+      jogando = false;
+      clearInterval(intervalo);
+
+      document.getElementById("mensagem").textContent =
+        texto + " Pontuação: " + pontos;
+
+      desenhar();
+    }
+
+    function voltarInicio() {
+      jogando = false;
+      clearInterval(intervalo);
+
+      document.getElementById("jogo").style.display = "none";
+      document.getElementById("inicio").style.display = "flex";
+    }
+  </script>
+
+</body>
+</html>
