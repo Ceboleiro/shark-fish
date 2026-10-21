@@ -3,327 +3,401 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Shark Finish</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Shark Finish 2D</title>
 <style>
-* { box-sizing: border-box; }
+* {box-sizing:border-box}
 body {
-  margin: 0;
-  background: #061b36;
-  color: white;
-  font-family: Arial, sans-serif;
-  text-align: center;
+  margin:0;
+  min-height:100vh;
+  background:linear-gradient(#05345c,#02152e);
+  color:white;
+  font-family:Arial,sans-serif;
+  text-align:center;
+  overflow-x:hidden;
 }
-h1 { margin: 15px 0 5px; color: #5ee6ff; }
-p { margin: 8px; }
-canvas {
-  display: block;
-  width: min(94vw, 440px);
-  height: auto;
-  margin: 12px auto;
-  border: 3px solid #5ee6ff;
-  border-radius: 12px;
-  touch-action: none;
+h1 {color:#6eeaff;margin:15px 0 5px}
+p {margin:8px}
+#score {font-size:23px;font-weight:bold}
+.ocean {
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  gap:8px;
+  margin:12px auto;
+}
+#game {
+  width:min(76vw,440px);
+  height:auto;
+  border:4px solid #7ceaff;
+  border-radius:12px;
+  box-shadow:0 0 25px #008cff77;
+  background:#0877b5;
+}
+.decor {
+  width:42px;
+  height:400px;
+  max-height:76vw;
+  position:relative;
+  overflow:hidden;
+}
+.fish {
+  position:absolute;
+  width:27px;
+  height:15px;
+  border-radius:60% 45% 45% 60%;
+  background:var(--c);
+  left:5px;
+  top:var(--y);
+  animation:swim 3s ease-in-out infinite alternate;
+  animation-delay:var(--delay);
+}
+.fish:before {
+  content:"";
+  position:absolute;
+  left:-10px;
+  top:0;
+  border-top:8px solid transparent;
+  border-bottom:8px solid transparent;
+  border-right:12px solid var(--c);
+}
+.fish:after {
+  content:"";
+  position:absolute;
+  width:3px;height:3px;
+  border-radius:50%;
+  background:#102c42;
+  right:5px;top:4px;
+}
+@keyframes swim {
+  from {transform:translateY(-12px) rotate(-8deg)}
+  to {transform:translateY(14px) rotate(8deg)}
 }
 button {
-  background: #12a8dc;
-  color: white;
-  border: none;
-  border-radius: 12px;
-  font-size: 24px;
-  font-weight: bold;
-  padding: 12px 22px;
-  cursor: pointer;
-  touch-action: manipulation;
+  background:#04a8db;
+  color:white;
+  border:0;
+  border-radius:12px;
+  padding:12px 20px;
+  font-size:22px;
+  font-weight:bold;
+  cursor:pointer;
+  touch-action:manipulation;
 }
+#start {background:#0caa73;font-size:18px}
 .controls {
-  display: grid;
-  grid-template-columns: repeat(3, 65px);
-  gap: 8px;
-  justify-content: center;
-  margin: 15px auto;
+  display:grid;
+  grid-template-columns:repeat(3,65px);
+  gap:7px;
+  justify-content:center;
+  margin:14px auto;
 }
-.controls button { padding: 14px 0; }
-#start { font-size: 18px; background: #14a66c; }
+.controls button {padding:12px 0}
 </style>
 </head>
 <body>
 
-<h1>🦈 SHARK FINISH 🌊</h1>
-<p>Capture os nadadores e bata seu recorde!</p>
-<h2 id="score">Pontos: 0</h2>
+<h1>SHARK FINISH 2D</h1>
+<p>Capture os nadadores e sobreviva!</p>
+<div id="score">Pontos: 0</div>
 
-<canvas id="game" width="400" height="400"></canvas>
+<div class="ocean">
+  <div class="decor" id="leftFish"></div>
+  <canvas id="game" width="400" height="400"></canvas>
+  <div class="decor" id="rightFish"></div>
+</div>
 
 <button id="start" onclick="restart()">INICIAR / REINICIAR</button>
 
 <div class="controls">
   <span></span>
-  <button onclick="changeDirection(0,-1)">▲</button>
+  <button onclick="turn(0,-1)">▲</button>
   <span></span>
-  <button onclick="changeDirection(-1,0)">◀</button>
-  <button onclick="changeDirection(0,1)">▼</button>
-  <button onclick="changeDirection(1,0)">▶</button>
+  <button onclick="turn(-1,0)">◀</button>
+  <button onclick="turn(0,1)">▼</button>
+  <button onclick="turn(1,0)">▶</button>
 </div>
-
-<p>Use os botões ou as setas do teclado.</p>
+<p>Use as setas ou WASD no computador.</p>
 
 <script>
-const canvas = document.getElementById("game");
-const ctx = canvas.getContext("2d");
-const scoreText = document.getElementById("score");
+const canvas=document.getElementById("game");
+const ctx=canvas.getContext("2d");
+const scoreEl=document.getElementById("score");
+const cell=20, count=20;
+let shark=[], human=null;
+let dir={x:1,y:0}, next={x:1,y:0};
+let points=0, playing=false, timer=null;
+let message="CLIQUE EM INICIAR";
 
-const size = 20;
-const cells = 20;
+// PEIXES FORA DA AREA DO JOGO
+function decorate(id) {
+  const el=document.getElementById(id);
+  const colors=["#ffcb30","#ff789a","#7cf9bc","#ff9944","#b39aff"];
+  for(let i=0;i<9;i++){
+    const fish=document.createElement("div");
+    fish.className="fish";
+    fish.style.setProperty("--c",colors[i%colors.length]);
+    fish.style.setProperty("--y",(5+i*10)+"%");
+    fish.style.setProperty("--delay",(-i*.4)+"s");
+    el.appendChild(fish);
+  }
+}
+decorate("leftFish");
+decorate("rightFish");
 
-let shark, human, direction, nextDirection;
-let score = 0;
-let playing = false;
-let timer = null;
-let message = "Clique em INICIAR";
-
-function randomHuman() {
-  let pos;
+function randomHuman(){
+  let p;
   do {
-    pos = {
-      x: Math.floor(Math.random() * cells),
-      y: Math.floor(Math.random() * cells)
-    };
-  } while (shark.some(s => s.x === pos.x && s.y === pos.y));
-  return pos;
+    p={x:Math.floor(Math.random()*count),
+       y:Math.floor(Math.random()*count)};
+  } while(shark.some(s=>s.x===p.x&&s.y===p.y));
+  return p;
 }
 
-function restart() {
+function restart(){
   clearInterval(timer);
-  shark = [{x:10,y:10},{x:9,y:10},{x:8,y:10}];
-  direction = {x:1,y:0};
-  nextDirection = {x:1,y:0};
-  score = 0;
-  human = randomHuman();
-  playing = true;
-  message = "";
-  scoreText.textContent = "Pontos: 0";
-  draw();
-  timer = setInterval(update, 145);
+  shark=[{x:10,y:10},{x:9,y:10},{x:8,y:10}];
+  dir={x:1,y:0};
+  next={x:1,y:0};
+  points=0;
+  human=randomHuman();
+  playing=true;
+  message="";
+  scoreEl.textContent="Pontos: 0";
+  timer=setInterval(update,155);
 }
 
-function changeDirection(x,y) {
-  if (!playing) return;
-  if (x === -direction.x && y === -direction.y) return;
-  nextDirection = {x,y};
+function turn(x,y){
+  if(!playing)return;
+  if(x===-dir.x&&y===-dir.y)return;
+  next={x,y};
 }
 
-document.addEventListener("keydown", e => {
-  const keys = {
-    ArrowUp:[0,-1], ArrowDown:[0,1],
-    ArrowLeft:[-1,0], ArrowRight:[1,0],
-    w:[0,-1], s:[0,1], a:[-1,0], d:[1,0]
+document.addEventListener("keydown",e=>{
+  const keys={
+    ArrowUp:[0,-1],ArrowDown:[0,1],
+    ArrowLeft:[-1,0],ArrowRight:[1,0],
+    w:[0,-1],s:[0,1],a:[-1,0],d:[1,0]
   };
-  if (keys[e.key]) {
+  if(keys[e.key]){
     e.preventDefault();
-    changeDirection(...keys[e.key]);
+    turn(...keys[e.key]);
   }
 });
 
-function update() {
-  if (!playing) return;
+function update(){
+  if(!playing)return;
+  dir={...next};
+  const head={x:shark[0].x+dir.x,
+              y:shark[0].y+dir.y};
+  const eating=head.x===human.x&&head.y===human.y;
+  const body=eating?shark:shark.slice(0,-1);
 
-  direction = {...nextDirection};
+  const wall=head.x<0||head.x>=count||
+             head.y<0||head.y>=count;
+  const hit=body.some(s=>s.x===head.x&&s.y===head.y);
 
-  const head = {
-    x: shark[0].x + direction.x,
-    y: shark[0].y + direction.y
-  };
-
-  const eating = head.x === human.x && head.y === human.y;
-  const body = eating ? shark : shark.slice(0,-1);
-
-  const wall = head.x < 0 || head.x >= cells ||
-               head.y < 0 || head.y >= cells;
-
-  const collision = body.some(
-    s => s.x === head.x && s.y === head.y
-  );
-
-  if (wall || collision) {
-    playing = false;
+  if(wall||hit){
+    playing=false;
     clearInterval(timer);
-    message = "GAME OVER! Pontos: " + score;
-    draw();
+    message="GAME OVER - "+points+" PONTOS";
     return;
   }
 
   shark.unshift(head);
-
-  if (eating) {
-    score += 10;
-    scoreText.textContent = "Pontos: " + score;
-    if (shark.length === cells * cells) {
-      playing = false;
+  if(eating){
+    points+=10;
+    scoreEl.textContent="Pontos: "+points;
+    if(shark.length===count*count){
+      playing=false;
       clearInterval(timer);
-      message = "VOCE VENCEU!";
-    } else {
-      human = randomHuman();
+      message="VOCE VENCEU!";
+    }else{
+      human=randomHuman();
     }
-  } else {
+  }else{
     shark.pop();
   }
-
-  draw();
 }
 
-function drawWater() {
-  const gradient = ctx.createLinearGradient(0,0,400,400);
-  gradient.addColorStop(0,"#087db9");
-  gradient.addColorStop(1,"#003c79");
-  ctx.fillStyle = gradient;
+// FUNDO DE AGUA ANIMADA
+function water(){
+  const g=ctx.createLinearGradient(0,0,400,400);
+  g.addColorStop(0,"#079dd0");
+  g.addColorStop(1,"#06467e");
+  ctx.fillStyle=g;
   ctx.fillRect(0,0,400,400);
 
-  const t = Date.now() / 700;
-
-  for (let y=10; y<400; y+=30) {
+  const t=Date.now()/850;
+  for(let y=12;y<400;y+=29){
     ctx.beginPath();
-    ctx.strokeStyle = "rgba(120,230,255,0.18)";
-    ctx.lineWidth = 2;
-
-    for (let x=0; x<=400; x+=5) {
-      const yy = y + Math.sin(x/25+t+y)*5;
-      if (x===0) ctx.moveTo(x,yy);
+    ctx.strokeStyle="rgba(170,245,255,.17)";
+    ctx.lineWidth=2;
+    for(let x=0;x<=400;x+=5){
+      const yy=y+Math.sin(x/30+t+y)*5;
+      if(x===0)ctx.moveTo(x,yy);
       else ctx.lineTo(x,yy);
     }
     ctx.stroke();
   }
 
-  for (let i=0; i<25; i++) {
-    const x = (i*73+20)%400;
-    const y = ((i*89-Date.now()/40)%400+400)%400;
+  for(let i=0;i<25;i++){
+    const x=(i*83+17)%400;
+    const y=((i*61-Date.now()/45)%400+400)%400;
     ctx.beginPath();
     ctx.arc(x,y,2.5,0,Math.PI*2);
-    ctx.strokeStyle = "rgba(200,250,255,0.35)";
+    ctx.strokeStyle="rgba(220,255,255,.4)";
     ctx.stroke();
   }
 }
 
-function drawFishDecorations() {
-  const time = Date.now() / 900;
-  const colors = [
-    "#FFD700",
-    "#FF914D",
-    "#FF66CC",
-    "#7CFFB2"
-  ];
+// HUMANO DESENHADO EM 2D
+function drawHuman(){
+  if(!human)return;
+  const x=human.x*cell+10;
+  const y=human.y*cell+10;
 
-  for (let i = 0; i < 16; i++) {
-    const side = i % 4;
-    const offset = (i * 47) % 380 + 10;
+  ctx.save();
+  ctx.translate(x,y);
+  ctx.rotate(Math.sin(Date.now()/300)*.12);
+  ctx.lineCap="round";
 
-    let x, y;
+  // Bracos
+  ctx.strokeStyle="#f0b98d";
+  ctx.lineWidth=3;
+  ctx.beginPath();
+  ctx.moveTo(-4,-1);ctx.lineTo(-9,3);
+  ctx.moveTo(4,-1);ctx.lineTo(9,3);
+  ctx.stroke();
 
-    if (side === 0) {
-      x = 10;
-      y = offset;
-    } else if (side === 1) {
-      x = 390;
-      y = offset;
-    } else if (side === 2) {
-      x = offset;
-      y = 10;
-    } else {
-      x = offset;
-      y = 390;
-    }
+  // Pernas
+  ctx.beginPath();
+  ctx.moveTo(-3,5);ctx.lineTo(-5,9);
+  ctx.moveTo(3,5);ctx.lineTo(5,9);
+  ctx.stroke();
+
+  // Roupa vermelha
+  ctx.fillStyle="#ff4e68";
+  ctx.beginPath();
+  ctx.roundRect(-5,-3,10,10,3);
+  ctx.fill();
+
+  // Cabeca
+  ctx.fillStyle="#f4c19a";
+  ctx.beginPath();
+  ctx.arc(0,-7,5,0,Math.PI*2);
+  ctx.fill();
+
+  // Cabelo
+  ctx.fillStyle="#49352c";
+  ctx.beginPath();
+  ctx.arc(0,-9,5,Math.PI,2*Math.PI);
+  ctx.fill();
+
+  ctx.restore();
+}
+
+// TUBARAO DESENHADO EM 2D
+function drawShark(){
+  shark.forEach((s,i)=>{
+    const x=s.x*cell+10;
+    const y=s.y*cell+10;
 
     ctx.save();
-    ctx.translate(x, y + Math.sin(time + i) * 3);
-    ctx.fillStyle = colors[i % colors.length];
+    ctx.translate(x,y);
 
-    // Corpo do peixe
-    ctx.beginPath();
-    ctx.ellipse(0, 0, 7, 4, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Cauda
-    ctx.beginPath();
-    ctx.moveTo(-5, 0);
-    ctx.lineTo(-12, -5);
-    ctx.lineTo(-12, 5);
-    ctx.closePath();
-    ctx.fill();
-
-    // Olho
-    ctx.fillStyle = "#111111";
-    ctx.beginPath();
-    ctx.arc(4, -1, 1.2, 0, Math.PI * 2);
-    ctx.fill();
-
-    ctx.restore();
-  }
-}
-
-function drawHuman() {
-  const x = human.x*size+10;
-  const y = human.y*size+10;
-
-  ctx.font = "19px Arial";
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  ctx.fillText("🏊",x,y);
-}
-
-function drawShark() {
-  shark.forEach((part,i) => {
-    const x = part.x*size+10;
-    const y = part.y*size+10;
-
-    if (i===0) {
-      ctx.save();
-      ctx.translate(x,y);
-      const angle = Math.atan2(direction.y,direction.x);
+    if(i===0){
+      const angle=Math.atan2(dir.y,dir.x);
       ctx.rotate(angle);
-      ctx.font = "23px Arial";
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-      ctx.fillText("🦈",0,0);
-      ctx.restore();
-    } else {
-      ctx.fillStyle = "#779bad";
+
+      // Cauda
+      ctx.fillStyle="#0074b9";
       ctx.beginPath();
-      ctx.ellipse(x,y,9,7,0,0,Math.PI*2);
+      ctx.moveTo(-7,0);
+      ctx.lineTo(-13,-9);
+      ctx.lineTo(-12,0);
+      ctx.lineTo(-13,9);
+      ctx.closePath();
       ctx.fill();
 
-      ctx.fillStyle = "#2a526c";
+      // Corpo azul eletrico
+      ctx.fillStyle="#00d9ff";
       ctx.beginPath();
-      ctx.moveTo(x-5,y-3);
-      ctx.lineTo(x,y-12);
-      ctx.lineTo(x+5,y-3);
+      ctx.ellipse(0,0,11,7,0,0,Math.PI*2);
+      ctx.fill();
+
+      // Barriga
+      ctx.fillStyle="#e8faff";
+      ctx.beginPath();
+      ctx.ellipse(4,3,6,3,0,0,Math.PI);
+      ctx.fill();
+
+      // Barbatana dorsal
+      ctx.fillStyle="#0079c7";
+      ctx.beginPath();
+      ctx.moveTo(-5,-4);
+      ctx.lineTo(0,-13);
+      ctx.lineTo(5,-4);
+      ctx.closePath();
+      ctx.fill();
+
+      // Olho
+      ctx.fillStyle="#09263b";
+      ctx.beginPath();
+      ctx.arc(6,-3,1.7,0,Math.PI*2);
+      ctx.fill();
+
+      // Boca e dentes
+      ctx.strokeStyle="#12364b";
+      ctx.lineWidth=1.3;
+      ctx.beginPath();
+      ctx.moveTo(6,3);ctx.lineTo(11,2);
+      ctx.stroke();
+
+      ctx.fillStyle="white";
+      ctx.beginPath();
+      ctx.moveTo(7,3);ctx.lineTo(9,5);
+      ctx.lineTo(10,2);
+      ctx.fill();
+
+    }else{
+      // Corpo que cresce
+      ctx.fillStyle="#00b9ee";
+      ctx.beginPath();
+      ctx.ellipse(0,0,9,7,0,0,Math.PI*2);
+      ctx.fill();
+
+      ctx.fillStyle="#006fb2";
+      ctx.beginPath();
+      ctx.moveTo(-5,-4);
+      ctx.lineTo(0,-11);
+      ctx.lineTo(5,-4);
+      ctx.closePath();
       ctx.fill();
     }
+
+    ctx.restore();
   });
 }
 
-function draw() {
-  drawWater();
-  drawFishDecorations();
-  if (human) drawHuman();
-  if (shark) drawShark();
+function draw(){
+  water();
+  drawHuman();
+  drawShark();
 
-  if (!playing && message) {
-    ctx.fillStyle = "rgba(0,15,35,0.75)";
+  if(!playing&&message){
+    ctx.fillStyle="rgba(0,18,40,.8)";
     ctx.fillRect(0,155,400,90);
-    ctx.fillStyle = "white";
-    ctx.font = "bold 22px Arial";
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
+    ctx.fillStyle="white";
+    ctx.textAlign="center";
+    ctx.textBaseline="middle";
+    ctx.font="bold 19px Arial";
     ctx.fillText(message,200,200);
   }
-}
 
-function animate() {
-  draw();
-  requestAnimationFrame(animate);
+  requestAnimationFrame(draw);
 }
-
-animate();
+draw();
 </script>
 </body>
 </html>
