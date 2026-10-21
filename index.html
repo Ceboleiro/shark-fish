@@ -204,6 +204,62 @@ function drawWater() {
   }
 }
 
+function drawFishDecorations() {
+  const time = Date.now() / 900;
+  const colors = [
+    "#FFD700",
+    "#FF914D",
+    "#FF66CC",
+    "#7CFFB2"
+  ];
+
+  for (let i = 0; i < 16; i++) {
+    const side = i % 4;
+    const offset = (i * 47) % 380 + 10;
+
+    let x, y;
+
+    if (side === 0) {
+      x = 10;
+      y = offset;
+    } else if (side === 1) {
+      x = 390;
+      y = offset;
+    } else if (side === 2) {
+      x = offset;
+      y = 10;
+    } else {
+      x = offset;
+      y = 390;
+    }
+
+    ctx.save();
+    ctx.translate(x, y + Math.sin(time + i) * 3);
+    ctx.fillStyle = colors[i % colors.length];
+
+    // Corpo do peixe
+    ctx.beginPath();
+    ctx.ellipse(0, 0, 7, 4, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Cauda
+    ctx.beginPath();
+    ctx.moveTo(-5, 0);
+    ctx.lineTo(-12, -5);
+    ctx.lineTo(-12, 5);
+    ctx.closePath();
+    ctx.fill();
+
+    // Olho
+    ctx.fillStyle = "#111111";
+    ctx.beginPath();
+    ctx.arc(4, -1, 1.2, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.restore();
+  }
+}
+
 function drawHuman() {
   const x = human.x*size+10;
   const y = human.y*size+10;
@@ -247,6 +303,7 @@ function drawShark() {
 
 function draw() {
   drawWater();
+  drawFishDecorations();
   if (human) drawHuman();
   if (shark) drawShark();
 
