@@ -1,0 +1,272 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Shark Finish</title>
+<style>
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: #061b36;
+  color: white;
+  font-family: Arial, sans-serif;
+  text-align: center;
+}
+h1 { margin: 15px 0 5px; color: #5ee6ff; }
+p { margin: 8px; }
+canvas {
+  display: block;
+  width: min(94vw, 440px);
+  height: auto;
+  margin: 12px auto;
+  border: 3px solid #5ee6ff;
+  border-radius: 12px;
+  touch-action: none;
+}
+button {
+  background: #12a8dc;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 24px;
+  font-weight: bold;
+  padding: 12px 22px;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.controls {
+  display: grid;
+  grid-template-columns: repeat(3, 65px);
+  gap: 8px;
+  justify-content: center;
+  margin: 15px auto;
+}
+.controls button { padding: 14px 0; }
+#start { font-size: 18px; background: #14a66c; }
+</style>
+</head>
+<body>
+
+<h1>🦈 SHARK FINISH 🌊</h1>
+<p>Capture os nadadores e bata seu recorde!</p>
+<h2 id="score">Pontos: 0</h2>
+
+<canvas id="game" width="400" height="400"></canvas>
+
+<button id="start" onclick="restart()">INICIAR / REINICIAR</button>
+
+<div class="controls">
+  <span></span>
+  <button onclick="changeDirection(0,-1)">▲</button>
+  <span></span>
+  <button onclick="changeDirection(-1,0)">◀</button>
+  <button onclick="changeDirection(0,1)">▼</button>
+  <button onclick="changeDirection(1,0)">▶</button>
+</div>
+
+<p>Use os botões ou as setas do teclado.</p>
+
+<script>
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
+const scoreText = document.getElementById("score");
+
+const size = 20;
+const cells = 20;
+
+let shark, human, direction, nextDirection;
+let score = 0;
+let playing = false;
+let timer = null;
+let message = "Clique em INICIAR";
+
+function randomHuman() {
+  let pos;
+  do {
+    pos = {
+      x: Math.floor(Math.random() * cells),
+      y: Math.floor(Math.random() * cells)
+    };
+  } while (shark.some(s => s.x === pos.x && s.y === pos.y));
+  return pos;
+}
+
+function restart() {
+  clearInterval(timer);
+  shark = [{x:10,y:10},{x:9,y:10},{x:8,y:10}];
+  direction = {x:1,y:0};
+  nextDirection = {x:1,y:0};
+  score = 0;
+  human = randomHuman();
+  playing = true;
+  message = "";
+  scoreText.textContent = "Pontos: 0";
+  draw();
+  timer = setInterval(update, 145);
+}
+
+function changeDirection(x,y) {
+  if (!playing) return;
+  if (x === -direction.x && y === -direction.y) return;
+  nextDirection = {x,y};
+}
+
+document.addEventListener("keydown", e => {
+  const keys = {
+    ArrowUp:[0,-1], ArrowDown:[0,1],
+    ArrowLeft:[-1,0], ArrowRight:[1,0],
+    w:[0,-1], s:[0,1], a:[-1,0], d:[1,0]
+  };
+  if (keys[e.key]) {
+    e.preventDefault();
+    changeDirection(...keys[e.key]);
+  }
+});
+
+function update() {
+  if (!playing) return;
+
+  direction = {...nextDirection};
+
+  const head = {
+    x: shark[0].x + direction.x,
+    y: shark[0].y + direction.y
+  };
+
+  const eating = head.x === human.x && head.y === human.y;
+  const body = eating ? shark : shark.slice(0,-1);
+
+  const wall = head.x < 0 || head.x >= cells ||
+               head.y < 0 || head.y >= cells;
+
+  const collision = body.some(
+    s => s.x === head.x && s.y === head.y
+  );
+
+  if (wall || collision) {
+    playing = false;
+    clearInterval(timer);
+    message = "GAME OVER! Pontos: " + score;
+    draw();
+    return;
+  }
+
+  shark.unshift(head);
+
+  if (eating) {
+    score += 10;
+    scoreText.textContent = "Pontos: " + score;
+    if (shark.length === cells * cells) {
+      playing = false;
+      clearInterval(timer);
+      message = "VOCE VENCEU!";
+    } else {
+      human = randomHuman();
+    }
+  } else {
+    shark.pop();
+  }
+
+  draw();
+}
+
+function drawWater() {
+  const gradient = ctx.createLinearGradient(0,0,400,400);
+  gradient.addColorStop(0,"#087db9");
+  gradient.addColorStop(1,"#003c79");
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0,0,400,400);
+
+  const t = Date.now() / 700;
+
+  for (let y=10; y<400; y+=30) {
+    ctx.beginPath();
+    ctx.strokeStyle = "rgba(120,230,255,0.18)";
+    ctx.lineWidth = 2;
+
+    for (let x=0; x<=400; x+=5) {
+      const yy = y + Math.sin(x/25+t+y)*5;
+      if (x===0) ctx.moveTo(x,yy);
+      else ctx.lineTo(x,yy);
+    }
+    ctx.stroke();
+  }
+
+  for (let i=0; i<25; i++) {
+    const x = (i*73+20)%400;
+    const y = ((i*89-Date.now()/40)%400+400)%400;
+    ctx.beginPath();
+    ctx.arc(x,y,2.5,0,Math.PI*2);
+    ctx.strokeStyle = "rgba(200,250,255,0.35)";
+    ctx.stroke();
+  }
+}
+
+function drawHuman() {
+  const x = human.x*size+10;
+  const y = human.y*size+10;
+
+  ctx.font = "19px Arial";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText("🏊",x,y);
+}
+
+function drawShark() {
+  shark.forEach((part,i) => {
+    const x = part.x*size+10;
+    const y = part.y*size+10;
+
+    if (i===0) {
+      ctx.save();
+      ctx.translate(x,y);
+      const angle = Math.atan2(direction.y,direction.x);
+      ctx.rotate(angle);
+      ctx.font = "23px Arial";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText("🦈",0,0);
+      ctx.restore();
+    } else {
+      ctx.fillStyle = "#779bad";
+      ctx.beginPath();
+      ctx.ellipse(x,y,9,7,0,0,Math.PI*2);
+      ctx.fill();
+
+      ctx.fillStyle = "#2a526c";
+      ctx.beginPath();
+      ctx.moveTo(x-5,y-3);
+      ctx.lineTo(x,y-12);
+      ctx.lineTo(x+5,y-3);
+      ctx.fill();
+    }
+  });
+}
+
+function draw() {
+  drawWater();
+  if (human) drawHuman();
+  if (shark) drawShark();
+
+  if (!playing && message) {
+    ctx.fillStyle = "rgba(0,15,35,0.75)";
+    ctx.fillRect(0,155,400,90);
+    ctx.fillStyle = "white";
+    ctx.font = "bold 22px Arial";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(message,200,200);
+  }
+}
+
+function animate() {
+  draw();
+  requestAnimationFrame(animate);
+}
+
+animate();
+</script>
+</body>
+</html>
